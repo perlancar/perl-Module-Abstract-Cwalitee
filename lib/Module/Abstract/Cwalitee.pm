@@ -4,7 +4,7 @@ package Module::Abstract::Cwalitee;
 # VERSION
 
 use 5.010001;
-use strict;
+use strict 'subs', 'vars';
 use warnings;
 use Log::ger;
 
@@ -95,7 +95,7 @@ sub calc_module_abstract_cwalitee {
     my $num_fail = 0;
     for my $ind (sort {
         $a->{priority} <=> $b->{priority} ||
-            $a->{name} cmp $b->{cmp}
+            $a->{name} cmp $b->{name}
         } @{ $res->[2] }) {
         my $indres = $ind->{code}->(r => $r);
         $num_run++;
@@ -112,7 +112,7 @@ sub calc_module_abstract_cwalitee {
             }
         } elsif ($indres->[0] == 412) {
             $result = undef;
-            $result_summary = "Cannot be run";
+            $result_summary = "Cannot be run".($indres->[1] ? ": $indres->[1]" : "");
         } else {
             return [500, "Unexpected result when checking indicator ".
                         "'$ind->{name}': $indres->[0] - $indres->[1]"];
@@ -130,8 +130,9 @@ sub calc_module_abstract_cwalitee {
     }
 
     push @res, {
-        indicator => 'Score',
-        result    => sprintf("%.2f", $num_run ? ($num_success / $num_run)*100 : 0),
+        indicator      => 'Score',
+        result         => sprintf("%.2f", $num_run ? ($num_success / $num_run)*100 : 0),
+        result_summary => "$num_success out of $num_run",
     };
 
     [200, "OK", \@res];
