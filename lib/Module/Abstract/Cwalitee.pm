@@ -8,6 +8,8 @@ use strict 'subs', 'vars';
 use warnings;
 use Log::ger;
 
+use Cwalitee::Common;
+
 use Exporter qw(import);
 our @EXPORT_OK = qw(
                        calc_module_abstract_cwalitee
@@ -19,60 +21,22 @@ our %SPEC;
 $SPEC{list_module_abstract_cwalitee_indicators} = {
     v => 1.1,
     args => {
-        detail => {
-            schema => 'bool*',
-            cmdline_aliases=>{l=>{}},
-        },
-        # XXX filter by severity
-        # XXX filter by module
-        # XXX filter by status
+        %Cwalitee::Common::args_list,
     },
 };
 sub list_module_abstract_cwalitee_indicators {
-    require PERLANCAR::Module::List;
-
     my %args = @_;
 
-    my @res;
-
-    my $mods = PERLANCAR::Module::List::list_modules(
-        'Module::Abstract::Cwalitee::', {list_modules=>1, recurse=>1});
-    my %seen_names; # val = module
-    for my $mod (sort keys %$mods) {
-        (my $mod_pm = "$mod.pm") =~ s!::!/!g;
-        require $mod_pm;
-        my $spec = \%{"$mod\::SPEC"};
-        for my $func (sort keys %$spec) {
-            my ($name) = $func =~ /\Aindicator_(\w+)\z/ or next;
-            warn "Duplicate name $name (module $mod and $seen_names{$mod})"
-                if $seen_names{$name};
-            $seen_names{$name} = $mod;
-            my $funcmeta = $spec->{$func};
-            my $rec = {
-                name     => $name,
-                module   => $mod,
-                summary  => $funcmeta->{summary},
-                priority => $funcmeta->{'x.indicator.priority'} // 50,
-                severity => $funcmeta->{'x.indicator.severity'} // 3,
-                status   => $funcmeta->{'x.indicator.status'} // 'stable',
-            };
-            if ($args{_return_coderef}) {
-                $rec->{code} = \&{"$mod\::$func"};
-            }
-            push @res, $rec;
-        }
-    }
-
-    unless ($args{detail}) {
-        @res = map { $_->{name} } @res;
-    }
-
-    [200, "OK", \@res];
+    Cwalitee::Common::list_cwalitee_indicators(
+        prefix => 'Module::Abstract::',
+        %args,
+    );
 }
 
 $SPEC{calc_module_abstract_cwalitee} = {
     v => 1.1,
     args => {
+        %Cwalitee::Common::args_calc,
         abstract => {
             schema => 'str*',
             req => 1,
@@ -81,65 +45,18 @@ $SPEC{calc_module_abstract_cwalitee} = {
     },
 };
 sub calc_module_abstract_cwalitee {
-    my %args = @_;
+    my %fargs = @_;
 
-    my $res = list_module_abstract_cwalitee_indicators(
-        detail => 1,
-        _return_coderef => 1,
+    Cwalitee::Common::calc_cwalitee(
+        prefix => 'Module::Abstract::',
+        %fargs,
+        code_init_r => sub {
+            return {
+                # module => ...
+                abstract => $fargs{abstract},
+            },
+        },
     );
-    return $res unless $res->[0] == 200;
-
-    my @res;
-    my $r = {
-        # module => ...
-        abstract => $args{abstract},
-    };
-    my $num_run = 0;
-    my $num_success = 0;
-    my $num_fail = 0;
-    for my $ind (sort {
-        $a->{priority} <=> $b->{priority} ||
-            $a->{name} cmp $b->{name}
-        } @{ $res->[2] }) {
-        my $indres = $ind->{code}->(r => $r);
-        $num_run++;
-        my ($result, $result_summary);
-        if ($indres->[0] == 200) {
-            if ($indres->[2]) {
-                $result = 0;
-                $num_fail++;
-                $result_summary = $indres->[2];
-            } else {
-                $result = 1;
-                $num_success++;
-                $result_summary = '';
-            }
-        } elsif ($indres->[0] == 412) {
-            $result = undef;
-            $result_summary = "Cannot be run".($indres->[1] ? ": $indres->[1]" : "");
-        } else {
-            return [500, "Unexpected result when checking indicator ".
-                        "'$ind->{name}': $indres->[0] - $indres->[1]"];
-        }
-        my $res = {
-            num => $num_run,
-            indicator => $ind->{name},
-            #priority => $ind->{priority},
-            severity => $ind->{severity},
-            #summary  => $ind->{summary},
-            result => $result,
-            result_summary => $result_summary,
-        };
-        push @res, $res;
-    }
-
-    push @res, {
-        indicator      => 'Score',
-        result         => sprintf("%.2f", $num_run ? ($num_success / $num_run)*100 : 0),
-        result_summary => "$num_success out of $num_run",
-    };
-
-    [200, "OK", \@res];
 }
 
 1;

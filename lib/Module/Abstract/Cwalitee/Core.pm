@@ -148,7 +148,6 @@ $SPEC{indicator_not_redundant} = {
     v => 1.1,
     args => {
     },
-    'x.indicator.severity' => 2,
 };
 sub indicator_not_redundant {
     my %args = @_;
