@@ -124,9 +124,9 @@ sub calc_module_abstract_cwalitee {
         my $res = {
             num => $num_run,
             indicator => $ind->{name},
-            priority => $ind->{priority},
+            #priority => $ind->{priority},
             severity => $ind->{severity},
-            summary  => $ind->{summary},
+            #summary  => $ind->{summary},
             result => $result,
             result_summary => $result_summary,
         };
