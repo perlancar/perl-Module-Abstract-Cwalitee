@@ -21,7 +21,7 @@ our %SPEC;
 $SPEC{list_module_abstract_cwalitee_indicators} = {
     v => 1.1,
     args => {
-        %Cwalitee::Common::args_list,
+        Cwalitee::Common::args_list('Module::Abstract::'),
     },
 };
 sub list_module_abstract_cwalitee_indicators {
@@ -36,7 +36,7 @@ sub list_module_abstract_cwalitee_indicators {
 $SPEC{calc_module_abstract_cwalitee} = {
     v => 1.1,
     args => {
-        %Cwalitee::Common::args_calc,
+        Cwalitee::Common::args_calc('Module::Abstract::'),
         abstract => {
             schema => 'str*',
             req => 1,
