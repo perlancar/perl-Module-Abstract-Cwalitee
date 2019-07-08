@@ -173,7 +173,7 @@ $SPEC{indicator_language_english} = {
     },
 };
 sub indicator_language_english {
-    require Lingua::Identify;
+    require Lingua::Identify::Any;
 
     my %args = @_;
     my $r = $args{r};
@@ -181,18 +181,16 @@ sub indicator_language_english {
     my $ab = $r->{abstract};
     defined $ab or return [412];
 
-    my %langs = Lingua::Identify::langof($ab);
-    return [412, "Lingua::Identify cannot detect language"] unless keys(%langs);
+    my $dlres = Lingua::Identify::Any::detect_text_language(text=>$ab);
+    return [412, "Cannot detect language: $dlres->[0] - $dlres->[1]"]
+        unless $dlres->[0] == 200;
 
-    my @langs = sort { $langs{$b}<=>$langs{$a} } keys %langs;
-    my $confidence = Lingua::Identify::confidence(%langs);
-    log_trace(
-        "Lingua::Identify result: langof=%s, langs=%s, confidence=%s",
-        \%langs, \@langs, $confidence);
-    if ($langs[0] ne 'en') {
-        [200, "OK", "Language not detected as English, ".
-             sprintf("%d%% %s (confidence %.2f)",
-                     $langs{$langs[0]}*100, $langs[0], $confidence)];
+    if ($dlres->[2]{'lang_code'} ne 'en') {
+        [200, "OK", "Language not detected as English ".
+             sprintf("(%s, confidence %.2f)",
+                     $dlres->[2]{lang_code},
+                     $dlres->[2]{confidence} // 0,
+                 )];
     } else {
         [200, "OK", ''];
     }
