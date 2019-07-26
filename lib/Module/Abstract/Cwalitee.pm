@@ -23,6 +23,18 @@ $SPEC{list_module_abstract_cwalitee_indicators} = {
     args => {
         Cwalitee::Common::args_list('Module::Abstract::'),
     },
+    examples => [
+        {
+            summary => 'List all installed indicators from all modules',
+            args => {},
+            test => 0,
+        },
+        {
+            summary => 'List only certain names, show details',
+            args => {include=>[qw/not_too_short not_too_long not_template/], detail=>1},
+            test => 0,
+        },
+    ],
 };
 sub list_module_abstract_cwalitee_indicators {
     my %args = @_;
@@ -43,6 +55,18 @@ $SPEC{calc_module_abstract_cwalitee} = {
             pos => 0,
         },
     },
+    examples => [
+        {
+            summary => 'Example of a good Abstract',
+            args => {abstract => 'Calculate the frobnitz of thromblemeisters'},
+            test => 0,
+        },
+        {
+            summary => 'Example of a not-so-good Abstract',
+            args => {abstract => 'PERL MODULE TO DO SOMETHING'},
+            test => 0,
+        },
+    ],
 };
 sub calc_module_abstract_cwalitee {
     my %fargs = @_;
