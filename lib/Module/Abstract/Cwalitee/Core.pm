@@ -105,7 +105,7 @@ sub indicator_not_template {
         [200, "OK", "Template from h2xs '$1'"];
     } elsif ($ab =~ /^(The great new )\w+(::\w+)*/i) {
         [200, "OK", "Template from module-starter '$1'"];
-    } elsif ($ab =~ /^\b(blah blah)\b/i) {
+    } elsif ($ab =~ /^\b(blah blah)\b|^it's new \$module/i) {
         [200, "OK", "Looks like a template"];
     } else {
         [200, "OK", ""];
