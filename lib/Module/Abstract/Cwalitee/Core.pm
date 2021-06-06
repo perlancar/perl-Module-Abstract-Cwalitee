@@ -1,6 +1,8 @@
 package Module::Abstract::Cwalitee::Core;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -162,6 +164,8 @@ sub indicator_not_redundant {
                     (?: \s+ (?:to|for))?
                 )/xi) {
         return [200, "OK", "Saying '$1' is redundant, omit it"];
+    } elsif (defined $r->{module} && $ab =~ /\b\Q$r->{module}\E\b/) {
+        return [200, "OK", "Mentioning the module itself is redundant, omit it"];
     } else {
         [200, "OK", ''];
     }

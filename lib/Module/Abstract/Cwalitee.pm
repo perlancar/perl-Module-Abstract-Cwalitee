@@ -54,6 +54,9 @@ $SPEC{calc_module_abstract_cwalitee} = {
             req => 1,
             pos => 0,
         },
+        module => {
+            schema => 'perl::modname*',
+        },
     },
     examples => [
         {
@@ -76,7 +79,7 @@ sub calc_module_abstract_cwalitee {
         %fargs,
         code_init_r => sub {
             return {
-                # module => ...
+                module => $fargs{module},
                 abstract => $fargs{abstract},
             },
         },
